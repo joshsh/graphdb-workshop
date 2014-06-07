@@ -78,5 +78,5 @@ public class Repository {
     public int watchers;
     public int watchers_count;
 
-    public Revision master_branch;
+    public String master_branch;
 }

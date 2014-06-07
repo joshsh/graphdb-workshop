@@ -255,6 +255,8 @@ public class GithubLoader {
                 break;
             case DeleteEvent:
                 break;
+            case DownloadEvent:
+                break;
             case FollowEvent:
                 break;
             case ForkEvent:

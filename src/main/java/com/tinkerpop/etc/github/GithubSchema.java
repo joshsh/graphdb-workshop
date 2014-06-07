@@ -9,6 +9,7 @@ public interface GithubSchema {
         CommitCommentEvent,
         CreateEvent,
         DeleteEvent,
+        DownloadEvent,
         FollowEvent,
         ForkApplyEvent,
         ForkEvent,

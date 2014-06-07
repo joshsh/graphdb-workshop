@@ -6,7 +6,6 @@ import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.TransactionalGraph;
 import com.tinkerpop.blueprints.Vertex;
-import com.tinkerpop.blueprints.impls.tg.TinkerGraph;
 import com.tinkerpop.etc.github.beans.Event;
 import com.tinkerpop.etc.github.beans.RepositoryBrief;
 
@@ -44,8 +43,9 @@ public class GithubLoader {
             DEFAULT_BUFFER_SIZE = 1000,
             DEFAULT_LOGGING_BUFFER_SIZE = 10000;
 
-    // e.g. 2014-05-31T00:13:30-07:00
-    public static final DateFormat TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
+    public static final DateFormat
+            OLD_TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss Z"), // e.g. 2012/03/11 00:00:00 -0800
+            NEW_TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX"); // e.g. 2014-05-31T00:13:30-07:00
 
     private static final String
             DOWNLOAD_DIRECTORY = "downloadDirectory",
@@ -70,17 +70,12 @@ public class GithubLoader {
 
     private final Comparator<File> fileComparator = new GitHubArchiveFileComparator();
 
-    public GithubLoader(final Graph graph,
-                        final File statusFile) throws IOException {
+    public GithubLoader(final File statusFile) throws IOException {
         objectMapper.configure(MapperFeature.USE_ANNOTATIONS, true);
-        this.graph = graph;
         this.statusFile = statusFile;
 
         configuration = new Properties();
-        loadConfiguration();
-    }
 
-    private void loadConfiguration() throws IOException {
         InputStream in = new FileInputStream(statusFile);
         try {
             configuration.load(in);
@@ -98,12 +93,30 @@ public class GithubLoader {
         s = configuration.getProperty(START_HOUR);
         if (null == s) {
             s = "2012-03-10-22";
+
+            // earliest archive files are in a slightly different format
+            //s = "2011-02-12-00";
         }
         startHour = new GithubTimestamp(s);
 
         s = configuration.getProperty(END_HOUR);
         if (null != s) {
             endHour = new GithubTimestamp(s);
+        }
+
+        String storageBackend = configuration.getProperty("storage.backend");
+        String keyspace = configuration.getProperty("storage.keyspace", "github");
+        if (null == storageBackend) {
+            LOGGER.warning("no storage backend specified.  Using TinkerGraph");
+            graph = GraphFactory.createTinkerGraph();
+        } else if (storageBackend.equals("cassandra")) {
+            String host = configuration.getProperty("storage.hostname", "127.0.0.1");
+            graph = GraphFactory.createTitanOnCassandra(host, keyspace);
+        } else if (storageBackend.equals("berkeleyje")) {
+            String dir = configuration.getProperty("storage.directory", "/tmp/github");
+            graph = GraphFactory.createTitanOnBerkeleyJE(dir, keyspace);
+        } else {
+            throw new IllegalStateException("unsupported storage backend: " + storageBackend);
         }
     }
 
@@ -357,9 +370,13 @@ public class GithubLoader {
         Date d;
 
         try {
-            d = TIMESTAMP_FORMAT.parse(timestamp);
+            d = NEW_TIMESTAMP_FORMAT.parse(timestamp);
         } catch (ParseException e) {
-            throw new InvalidEventException("not a valid timestamp: " + timestamp);
+            try {
+                d = OLD_TIMESTAMP_FORMAT.parse(timestamp);
+            } catch (ParseException e1) {
+                throw new InvalidEventException("not a valid timestamp: " + timestamp);
+            }
         }
 
         return d.getTime();
@@ -390,14 +407,14 @@ public class GithubLoader {
             GithubTimestamp lastTimestamp = new GithubTimestamp(files.get(files.size() - 1));
 
             if (lastTimestamp.compareTo(startHour) >= 0) {
-                startHour = lastTimestamp.nextTimestamp();
+                startHour = lastTimestamp.nextHour();
             }
         }
 
         GithubTimestamp cur = startHour;
         while (true) {
             long now = System.currentTimeMillis();
-            long curTime = cur.date.getTime().getTime();
+            long curTime = cur.getTime();
             if (curTime > now || (null != endHour && cur.compareTo(endHour) > 0)) {
                 break;
             }
@@ -410,9 +427,14 @@ public class GithubLoader {
             try {
                 rbc = Channels.newChannel(url.openStream());
             } catch (FileNotFoundException e) {
-                // we've reached the end of the archive
-                break;
+                LOGGER.info("no such file: " + url + " ");
+
+                // just skip; there are missing hours in the archive
+                continue;
+            } finally {
+                cur = cur.nextHour();
             }
+
             FileOutputStream fos = new FileOutputStream(f);
             try {
                 fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
@@ -422,8 +444,6 @@ public class GithubLoader {
 
             File f2 = new File(downloadDirectory, "" + cur + ".json.gz");
             f.renameTo(f2);
-
-            cur = cur.nextTimestamp();
         }
     }
 
@@ -434,14 +454,21 @@ public class GithubLoader {
     }
 
     public static void main(final String[] args) throws Exception {
-        Graph g = new TinkerGraph();
+        File config = args.length > 0 ? new File(args[0]) : new File("githubloader.props");
+        if (!config.exists()) {
+            exitWithError("configuration file does not exist: " + config.getAbsoluteFile());
+        }
 
-        GithubLoader loader = new GithubLoader(g, new File("/tmp/githubloader.props"));
-        //loader.setVerbose(true);
+        GithubLoader loader = new GithubLoader(config);
+        loader.setVerbose(true);
 
         loader.downloadFiles();
 
         loader.loadFiles();
-        //loader.loadFiles(new File("/Users/josh/projects/fortytwo/laboratory/test/texaslinuxfest/examples/2014-05-30-0_1000.json"));
+    }
+
+    private static void exitWithError(final String message) {
+        System.err.println(message);
+        System.exit(1);
     }
 }

@@ -9,15 +9,21 @@ import java.util.TimeZone;
  * @author Joshua Shinavier (http://fortytwo.net)
  */
 class GithubTimestamp implements Comparable<GithubTimestamp> {
-    public final Calendar date;
+    private final Calendar date;
 
-    public GithubTimestamp(final Calendar date, final int hour) {
+    private GithubTimestamp(final Calendar date) {
         this.date = date;
     }
 
     public GithubTimestamp(final String s) {
-        int i = s.lastIndexOf("-");
-        String[] a = s.substring(0, i).split("-");
+        int i;
+        String[] a;
+        try {
+            i = s.lastIndexOf("-");
+            a = s.substring(0, i).split("-");
+        } catch (Exception e) {
+            throw new IllegalArgumentException("not a valid timestamp: " + s);
+        }
 
         date = new GregorianCalendar();
         date.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -41,10 +47,10 @@ class GithubTimestamp implements Comparable<GithubTimestamp> {
         return this.date.compareTo(other.date);
     }
 
-    public GithubTimestamp nextTimestamp() {
+    public GithubTimestamp nextHour() {
         Calendar cal = (Calendar) date.clone();
         cal.add(Calendar.HOUR, 1);
-        return new GithubTimestamp(cal, 0);
+        return new GithubTimestamp(cal);
     }
 
     @Override
@@ -53,6 +59,10 @@ class GithubTimestamp implements Comparable<GithubTimestamp> {
                 + "-" + pad(1 + date.get(Calendar.MONTH))
                 + "-" + pad(date.get(Calendar.DAY_OF_MONTH))
                 + "-" + date.get(Calendar.HOUR_OF_DAY);
+    }
+
+    public long getTime() {
+        return date.getTime().getTime();
     }
 
     private String pad(final int i) {

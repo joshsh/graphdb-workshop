@@ -9,6 +9,7 @@ public interface GithubSchema {
         CommitCommentEvent,
         CreateEvent,
         DeleteEvent,
+        ForkApplyEvent,
         ForkEvent,
         GollumEvent,
         IssueCommentEvent,

@@ -39,10 +39,6 @@ import java.util.zip.GZIPInputStream;
 public class GithubLoader {
     private static final Logger LOGGER = Logger.getLogger(GithubLoader.class.getName());
 
-    private static final int
-            DEFAULT_BUFFER_SIZE = 1000,
-            DEFAULT_LOGGING_BUFFER_SIZE = 10000;
-
     public static final DateFormat
             OLD_TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss Z"), // e.g. 2012/03/11 00:00:00 -0800
             NEW_TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX"); // e.g. 2014-05-31T00:13:30-07:00
@@ -53,8 +49,6 @@ public class GithubLoader {
             START_HOUR = "startHour",
             END_HOUR = "endHour";
 
-    private int bufferSize = DEFAULT_BUFFER_SIZE;
-    private int loggingBufferSize = DEFAULT_LOGGING_BUFFER_SIZE;
     private boolean verbose = false;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -132,24 +126,10 @@ public class GithubLoader {
     }
 
     /**
-     * @param bufferSize the number of statements to be added per transaction commit
-     */
-    public void setBufferSize(final int bufferSize) {
-        this.bufferSize = bufferSize;
-    }
-
-    /**
      * @param verbose whether to log information on individual files loaded and statements added
      */
     public void setVerbose(final boolean verbose) {
         this.verbose = verbose;
-    }
-
-    /**
-     * @param loggingBufferSize the number of events per logging message (if verbose=true)
-     */
-    public void setLoggingBufferSize(final int loggingBufferSize) {
-        this.loggingBufferSize = loggingBufferSize;
     }
 
     /**
@@ -196,53 +176,59 @@ public class GithubLoader {
 
             return count;
         } else if (null == lastFileLoaded || fileComparator.compare(lastFileLoaded, fileOrDirectory) < 0) {
-            long startTime = System.currentTimeMillis();
-            if (verbose) {
-                LOGGER.info("loading file: " + fileOrDirectory);
-            }
-            String fileName = fileOrDirectory.getName();
-            InputStream is;
-            if (fileName.endsWith(".gz")) {
-                is = new GZIPInputStream(new FileInputStream(fileOrDirectory));
-                fileName = fileName.substring(0, fileName.lastIndexOf("."));
-            } else {
-                is = new FileInputStream(fileOrDirectory);
-            }
-
             try {
-                if (!fileName.endsWith(".json") && !fileName.endsWith(".ldjson")) {
-                    LOGGER.warning("file does not appear to be line-delimited JSON: " + fileName);
-                    return 0;
-                }
-
-                BufferedReader br = new BufferedReader(new InputStreamReader(is));
-                String line;
-                long lineNo = 0;
-                while (null != (line = br.readLine())) {
-                    lineNo++;
-
-                    try {
-                        parseGithubJson(line.trim());
-                    } catch (InvalidEventException e) {
-                        LOGGER.warning("invalid event on line " + lineNo + " in " + fileName);
-                        throw e;
-                    } catch (Exception e) {
-                        LOGGER.severe("error on line " + lineNo + " in " + fileName);
-                        throw e;
-                    }
-                }
-
-                long endTime = System.currentTimeMillis();
+                long startTime = System.currentTimeMillis();
                 if (verbose) {
-                    LOGGER.info("\tfinished reading " + lineNo + " lines in " + (endTime - startTime) + "ms");
+                    LOGGER.info("loading file: " + fileOrDirectory);
+                }
+                String fileName = fileOrDirectory.getName();
+                InputStream is;
+                if (fileName.endsWith(".gz")) {
+                    is = new GZIPInputStream(new FileInputStream(fileOrDirectory));
+                    fileName = fileName.substring(0, fileName.lastIndexOf("."));
+                } else {
+                    is = new FileInputStream(fileOrDirectory);
                 }
 
-                lastFileLoaded = fileOrDirectory;
-                saveConfiguration();
+                try {
+                    if (!fileName.endsWith(".json") && !fileName.endsWith(".ldjson")) {
+                        LOGGER.warning("file does not appear to be line-delimited JSON: " + fileName);
+                        return 0;
+                    }
 
-                return lineNo;
+                    BufferedReader br = new BufferedReader(new InputStreamReader(is));
+                    String line;
+                    long lineNo = 0;
+                    while (null != (line = br.readLine())) {
+                        lineNo++;
+
+                        try {
+                            parseGithubJson(line.trim());
+                        } catch (InvalidEventException e) {
+                            LOGGER.warning("invalid event on line " + lineNo + " in " + fileName);
+                            throw e;
+                        } catch (Exception e) {
+                            LOGGER.severe("error on line " + lineNo + " in " + fileName);
+                            throw e;
+                        }
+                    }
+
+                    long endTime = System.currentTimeMillis();
+                    if (verbose) {
+                        LOGGER.info("\tfinished reading " + lineNo + " lines in " + (endTime - startTime) + "ms");
+                    }
+
+                    lastFileLoaded = fileOrDirectory;
+                    saveConfiguration();
+
+                    commit();
+
+                    return lineNo;
+                } finally {
+                    is.close();
+                }
             } finally {
-                is.close();
+                rollback();
             }
         } else {
             return 0;
@@ -269,7 +255,11 @@ public class GithubLoader {
                 break;
             case DeleteEvent:
                 break;
+            case FollowEvent:
+                break;
             case ForkEvent:
+                break;
+            case GistEvent:
                 break;
             case GollumEvent:
                 break;
@@ -294,19 +284,6 @@ public class GithubLoader {
                 break;
             case WatchEvent:
                 break;
-        }
-
-        commitIncremental();
-    }
-
-    private void commitIncremental() {
-        countToCommit++;
-        if (0 == countToCommit % bufferSize) {
-            commit();
-
-            if (verbose && 0 == countToCommit % loggingBufferSize) {
-                LOGGER.info("" + System.currentTimeMillis() + "\t" + countToCommit);
-            }
         }
     }
 
@@ -462,7 +439,7 @@ public class GithubLoader {
         GithubLoader loader = new GithubLoader(config);
         loader.setVerbose(true);
 
-        loader.downloadFiles();
+        //loader.downloadFiles();
 
         loader.loadFiles();
     }

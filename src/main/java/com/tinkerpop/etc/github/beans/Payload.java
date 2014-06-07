@@ -26,4 +26,13 @@ public class Payload {
     public Object[] shas;
     public Integer size;
     public Team team;
+
+    public String before;
+    public String after;
+    public String name;
+    public String url;
+    public Long id;
+    public String desc;
+
+    public User target;
 }

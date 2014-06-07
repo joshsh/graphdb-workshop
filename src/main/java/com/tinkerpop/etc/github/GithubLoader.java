@@ -13,13 +13,24 @@ import com.tinkerpop.etc.github.beans.RepositoryBrief;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.URL;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Properties;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 
@@ -36,6 +47,12 @@ public class GithubLoader {
     // e.g. 2014-05-31T00:13:30-07:00
     public static final DateFormat TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
 
+    private static final String
+            DOWNLOAD_DIRECTORY = "downloadDirectory",
+            LAST_FILE_LOADED = "lastFileLoaded",
+            START_HOUR = "startHour",
+            END_HOUR = "endHour";
+
     private int bufferSize = DEFAULT_BUFFER_SIZE;
     private int loggingBufferSize = DEFAULT_LOGGING_BUFFER_SIZE;
     private boolean verbose = false;
@@ -43,12 +60,62 @@ public class GithubLoader {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private final Graph graph;
+    private final File statusFile;
+    private final Properties configuration;
+    private File lastFileLoaded;
+    private String downloadDirectory;
+    private GithubTimestamp startHour, endHour;
 
     private long countToCommit = 0;
 
-    public GithubLoader(final Graph graph) {
+    private final Comparator<File> fileComparator = new GitHubArchiveFileComparator();
+
+    public GithubLoader(final Graph graph,
+                        final File statusFile) throws IOException {
         objectMapper.configure(MapperFeature.USE_ANNOTATIONS, true);
         this.graph = graph;
+        this.statusFile = statusFile;
+
+        configuration = new Properties();
+        loadConfiguration();
+    }
+
+    private void loadConfiguration() throws IOException {
+        InputStream in = new FileInputStream(statusFile);
+        try {
+            configuration.load(in);
+        } finally {
+            in.close();
+        }
+
+        String s = configuration.getProperty(LAST_FILE_LOADED);
+        if (null != s) {
+            lastFileLoaded = new File(s);
+        }
+
+        downloadDirectory = configuration.getProperty(DOWNLOAD_DIRECTORY);
+
+        s = configuration.getProperty(START_HOUR);
+        if (null == s) {
+            s = "2012-03-10-22";
+        }
+        startHour = new GithubTimestamp(s);
+
+        s = configuration.getProperty(END_HOUR);
+        if (null != s) {
+            endHour = new GithubTimestamp(s);
+        }
+    }
+
+    private void saveConfiguration() throws IOException {
+        configuration.setProperty(LAST_FILE_LOADED, lastFileLoaded.getAbsolutePath());
+
+        OutputStream out = new FileOutputStream(statusFile);
+        try {
+            configuration.store(out, "GitHub Archive loader state");
+        } finally {
+            out.close();
+        }
     }
 
     /**
@@ -74,19 +141,18 @@ public class GithubLoader {
 
     /**
      * Loads a GitHub Archive event dump file, or a directory containing event dumps
-     *
-     * @param fileOrDirectory a line-delimited JSON file or a directory which contains (at any level)
-     *                        one or more line-delimited JSON files
-     *                        Files must be named with an appropriate extension, i.e. .json or .ldjson,
-     *                        or an appropriate extension followed by .gz if they are compressed with Gzip.
      */
-    public synchronized void load(final File fileOrDirectory) throws Exception {
-        LOGGER.info("loading from " + fileOrDirectory);
-        // TODO: open graph
+    public synchronized void loadFiles() throws Exception {
+        if (null == downloadDirectory) {
+            throw new IllegalStateException("" + DOWNLOAD_DIRECTORY + " must be set");
+        }
+
+        LOGGER.info("loading from " + downloadDirectory);
+
         try {
             long startTime = System.currentTimeMillis();
 
-            long count = loadRecursive(fileOrDirectory);
+            long count = loadRecursive(new File(downloadDirectory));
 
             // commit leftover statements
             commit();
@@ -99,16 +165,24 @@ public class GithubLoader {
         }
     }
 
+    /**
+     * @param fileOrDirectory a line-delimited JSON file or a directory which contains (at any level)
+     *                        one or more line-delimited JSON files
+     *                        Files must be named with an appropriate extension, i.e. .json or .ldjson,
+     *                        or an appropriate extension followed by .gz if they are compressed with Gzip.
+     */
     private long loadRecursive(final File fileOrDirectory) throws Exception {
         if (fileOrDirectory.isDirectory()) {
             long count = 0;
 
-            for (File child : fileOrDirectory.listFiles()) {
+            List<File> files = sortedFiles(fileOrDirectory);
+
+            for (File child : files) {
                 count += loadRecursive(child);
             }
 
             return count;
-        } else {
+        } else if (null == lastFileLoaded || fileComparator.compare(lastFileLoaded, fileOrDirectory) < 0) {
             long startTime = System.currentTimeMillis();
             if (verbose) {
                 LOGGER.info("loading file: " + fileOrDirectory);
@@ -150,18 +224,28 @@ public class GithubLoader {
                     LOGGER.info("\tfinished reading " + lineNo + " lines in " + (endTime - startTime) + "ms");
                 }
 
+                lastFileLoaded = fileOrDirectory;
+                saveConfiguration();
+
                 return lineNo;
             } finally {
                 is.close();
             }
+        } else {
+            return 0;
         }
+    }
+
+    private List<File> sortedFiles(final File dir) {
+        List<File> files = new LinkedList<File>();
+        Collections.addAll(files, dir.listFiles());
+        Collections.sort(files, fileComparator);
+        return files;
     }
 
     private void parseGithubJson(final String jsonStr) throws IOException, InvalidEventException {
         Event event = objectMapper.readValue(jsonStr, Event.class);
         //System.out.println("got event: " + event);
-
-        // TODO: add to the graph
 
         GithubSchema.EventType eventType = GithubSchema.EventType.valueOf(event.type);
 
@@ -287,13 +371,77 @@ public class GithubLoader {
         }
     }
 
+    private void downloadFiles() throws IOException {
+        if (null == downloadDirectory) {
+            throw new IllegalStateException("" + DOWNLOAD_DIRECTORY + " must be set");
+        }
+        // wget http://data.githubarchive.org/2014-05-31-{0..23}.json.gz
+
+        File dir = new File(downloadDirectory);
+
+        for (File f : dir.listFiles()) {
+            if (f.getName().endsWith(".tmp")) {
+                f.delete();
+            }
+        }
+
+        List<File> files = sortedFiles(dir);
+        if (files.size() > 0) {
+            GithubTimestamp lastTimestamp = new GithubTimestamp(files.get(files.size() - 1));
+
+            if (lastTimestamp.compareTo(startHour) >= 0) {
+                startHour = lastTimestamp.nextTimestamp();
+            }
+        }
+
+        GithubTimestamp cur = startHour;
+        while (true) {
+            long now = System.currentTimeMillis();
+            long curTime = cur.date.getTime().getTime();
+            if (curTime > now || (null != endHour && cur.compareTo(endHour) > 0)) {
+                break;
+            }
+
+            URL url = new URL("http://data.githubarchive.org/" + cur + ".json.gz");
+            File f = new File(downloadDirectory, "" + cur + ".json.gz.tmp");
+
+            LOGGER.info("downloading " + url);
+            ReadableByteChannel rbc;
+            try {
+                rbc = Channels.newChannel(url.openStream());
+            } catch (FileNotFoundException e) {
+                // we've reached the end of the archive
+                break;
+            }
+            FileOutputStream fos = new FileOutputStream(f);
+            try {
+                fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+            } finally {
+                fos.close();
+            }
+
+            File f2 = new File(downloadDirectory, "" + cur + ".json.gz");
+            f.renameTo(f2);
+
+            cur = cur.nextTimestamp();
+        }
+    }
+
+    private class GitHubArchiveFileComparator implements Comparator<File> {
+        public int compare(final File f1, final File f2) {
+            return new GithubTimestamp(f1).compareTo(new GithubTimestamp(f2));
+        }
+    }
+
     public static void main(final String[] args) throws Exception {
         Graph g = new TinkerGraph();
 
-        GithubLoader loader = new GithubLoader(g);
+        GithubLoader loader = new GithubLoader(g, new File("/tmp/githubloader.props"));
         //loader.setVerbose(true);
 
-        loader.load(new File("/Users/josh/tmp/github"));
-        //loader.load(new File("/Users/josh/projects/fortytwo/laboratory/test/texaslinuxfest/examples/2014-05-30-0_1000.json"));
+        loader.downloadFiles();
+
+        loader.loadFiles();
+        //loader.loadFiles(new File("/Users/josh/projects/fortytwo/laboratory/test/texaslinuxfest/examples/2014-05-30-0_1000.json"));
     }
 }

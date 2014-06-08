@@ -14,4 +14,6 @@ public class Links {
     public Webpage review_comments;
     public Webpage self;
     public Webpage statuses;
+
+    public Webpage status;
 }

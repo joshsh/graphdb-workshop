@@ -441,7 +441,7 @@ public class GithubLoader {
         GithubLoader loader = new GithubLoader(config);
         loader.setVerbose(true);
 
-        //loader.downloadFiles();
+        loader.downloadFiles();
 
         loader.loadFiles();
     }

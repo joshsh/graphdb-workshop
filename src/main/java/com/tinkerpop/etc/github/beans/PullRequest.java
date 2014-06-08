@@ -42,4 +42,6 @@ public class PullRequest {
     public String url;
     public User user;
     public Links _links;
+
+    public String status_url;
 }

@@ -79,4 +79,6 @@ public class Repository {
     public int watchers_count;
 
     public String master_branch;
+    public Urls urls;
+    public Links _links;
 }

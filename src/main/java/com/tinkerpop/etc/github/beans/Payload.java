@@ -33,6 +33,5 @@ public class Payload {
     public String url;
     public Long id;
     public String desc;
-
     public User target;
 }

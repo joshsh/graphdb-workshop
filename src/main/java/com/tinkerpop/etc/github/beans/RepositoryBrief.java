@@ -31,5 +31,6 @@ public class RepositoryBrief {
     public int stargazers;
     public String url;
     public int watchers;
+
     public String integrate_branch;
 }

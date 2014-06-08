@@ -22,6 +22,9 @@ public class User {
     public String subscriptions_url;
     public String type;
     public String url;
+
     public Integer followers;
     public Integer repos;
+    public Urls urls;
+    public Links _links;
 }

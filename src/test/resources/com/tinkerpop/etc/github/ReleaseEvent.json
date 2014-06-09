@@ -1,0 +1,80 @@
+{
+  "created_at": "2014-02-06T13:16:38-08:00",
+  "payload": {
+    "action": "published",
+    "release": {
+      "url": "https:\/\/api.github.com\/repos\/myBotTeam\/SerialConsole\/releases\/176112",
+      "assets_url": "https:\/\/api.github.com\/repos\/myBotTeam\/SerialConsole\/releases\/176112\/assets",
+      "upload_url": "https:\/\/uploads.github.com\/repos\/myBotTeam\/SerialConsole\/releases\/176112\/assets{?name}",
+      "html_url": "https:\/\/github.com\/myBotTeam\/SerialConsole\/releases\/tag\/v1",
+      "id": 176112,
+      "tag_name": "v1",
+      "target_commitish": "master",
+      "name": "Vorf\u00fchrbare Version",
+      "body": "",
+      "draft": false,
+      "author": {
+        "login": "TheLurps",
+        "id": 1508461,
+        "avatar_url": "https:\/\/gravatar.com\/avatar\/ed7fe50b8af1ed28e16e6b01324f2e7b?d=https%3A%2F%2Fidenticons.github.com%2F7413c2506b59ad0038ab24e3782cc24e.png&r=x",
+        "gravatar_id": "ed7fe50b8af1ed28e16e6b01324f2e7b",
+        "url": "https:\/\/api.github.com\/users\/TheLurps",
+        "html_url": "https:\/\/github.com\/TheLurps",
+        "followers_url": "https:\/\/api.github.com\/users\/TheLurps\/followers",
+        "following_url": "https:\/\/api.github.com\/users\/TheLurps\/following{\/other_user}",
+        "gists_url": "https:\/\/api.github.com\/users\/TheLurps\/gists{\/gist_id}",
+        "starred_url": "https:\/\/api.github.com\/users\/TheLurps\/starred{\/owner}{\/repo}",
+        "subscriptions_url": "https:\/\/api.github.com\/users\/TheLurps\/subscriptions",
+        "organizations_url": "https:\/\/api.github.com\/users\/TheLurps\/orgs",
+        "repos_url": "https:\/\/api.github.com\/users\/TheLurps\/repos",
+        "events_url": "https:\/\/api.github.com\/users\/TheLurps\/events{\/privacy}",
+        "received_events_url": "https:\/\/api.github.com\/users\/TheLurps\/received_events",
+        "type": "User",
+        "site_admin": false
+      },
+      "prerelease": false,
+      "created_at": "2014-02-06T21:15:01Z",
+      "published_at": "2014-02-06T21:16:38Z",
+      "assets": [
+
+      ],
+      "tarball_url": "https:\/\/api.github.com\/repos\/myBotTeam\/SerialConsole\/tarball\/v1",
+      "zipball_url": "https:\/\/api.github.com\/repos\/myBotTeam\/SerialConsole\/zipball\/v1"
+    }
+  },
+  "public": true,
+  "type": "ReleaseEvent",
+  "url": "https:\/\/github.com\/myBotTeam\/SerialConsole\/releases\/tag\/v1",
+  "actor": "TheLurps",
+  "actor_attributes": {
+    "login": "TheLurps",
+    "type": "User",
+    "gravatar_id": "ed7fe50b8af1ed28e16e6b01324f2e7b",
+    "name": "Joshua Schraven",
+    "blog": "",
+    "location": "Oldenburg, Germany",
+    "email": ""
+  },
+  "repository": {
+    "id": 16354720,
+    "name": "SerialConsole",
+    "url": "https:\/\/github.com\/myBotTeam\/SerialConsole",
+    "description": "Testprogramm - USB Schnittstelle",
+    "watchers": 0,
+    "stargazers": 0,
+    "forks": 0,
+    "fork": false,
+    "size": 164,
+    "owner": "myBotTeam",
+    "private": false,
+    "open_issues": 0,
+    "has_issues": true,
+    "has_downloads": true,
+    "has_wiki": true,
+    "language": "C#",
+    "created_at": "2014-01-29T10:53:24-08:00",
+    "pushed_at": "2014-02-06T13:15:56-08:00",
+    "master_branch": "master",
+    "organization": "myBotTeam"
+  }
+}

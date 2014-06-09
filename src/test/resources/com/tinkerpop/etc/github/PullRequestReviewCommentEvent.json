@@ -1,0 +1,86 @@
+{
+  "created_at": "2014-02-06T13:04:39-08:00",
+  "payload": {
+    "comment": {
+      "url": "https:\/\/api.github.com\/repos\/Polymer\/CustomElements\/pulls\/comments\/9518299",
+      "id": 9518299,
+      "diff_hunk": "@@ -142,7 +142,7 @@ if (useNative) {\n     \/\/ force our .constructor to be our actual constructor\n     definition.prototype.constructor = definition.ctor;\n     \/\/ if initial parsing is complete\n-    if (scope.ready) {\n+    if (scope.ready || scope.performedInitialDocumentUpgrade) {",
+      "path": "src\/CustomElements.js",
+      "position": 23,
+      "original_position": 23,
+      "commit_id": "15de6c42355f2746637f39b2143fc78ec075caa7",
+      "original_commit_id": "15de6c42355f2746637f39b2143fc78ec075caa7",
+      "user": {
+        "login": "jmesserly",
+        "id": 1081711,
+        "avatar_url": "https:\/\/gravatar.com\/avatar\/97b9e181b75ee11e0d133dc446f43c3f?d=https%3A%2F%2Fidenticons.github.com%2Fded2951e7917fe56a24618e08110b702.png&r=x",
+        "gravatar_id": "97b9e181b75ee11e0d133dc446f43c3f",
+        "url": "https:\/\/api.github.com\/users\/jmesserly",
+        "html_url": "https:\/\/github.com\/jmesserly",
+        "followers_url": "https:\/\/api.github.com\/users\/jmesserly\/followers",
+        "following_url": "https:\/\/api.github.com\/users\/jmesserly\/following{\/other_user}",
+        "gists_url": "https:\/\/api.github.com\/users\/jmesserly\/gists{\/gist_id}",
+        "starred_url": "https:\/\/api.github.com\/users\/jmesserly\/starred{\/owner}{\/repo}",
+        "subscriptions_url": "https:\/\/api.github.com\/users\/jmesserly\/subscriptions",
+        "organizations_url": "https:\/\/api.github.com\/users\/jmesserly\/orgs",
+        "repos_url": "https:\/\/api.github.com\/users\/jmesserly\/repos",
+        "events_url": "https:\/\/api.github.com\/users\/jmesserly\/events{\/privacy}",
+        "received_events_url": "https:\/\/api.github.com\/users\/jmesserly\/received_events",
+        "type": "User",
+        "site_admin": false
+      },
+      "body": "fyi, chatted with @blois -- this was an old workaround for a bug y'all have since fixed. Removing.",
+      "created_at": "2014-02-06T21:04:39Z",
+      "updated_at": "2014-02-06T21:04:39Z",
+      "html_url": "https:\/\/github.com\/Polymer\/CustomElements\/pull\/97#discussion_r9518299",
+      "pull_request_url": "https:\/\/api.github.com\/repos\/Polymer\/CustomElements\/pulls\/97",
+      "_links": {
+        "self": {
+          "href": "https:\/\/api.github.com\/repos\/Polymer\/CustomElements\/pulls\/comments\/9518299"
+        },
+        "html": {
+          "href": "https:\/\/github.com\/Polymer\/CustomElements\/pull\/97#discussion_r9518299"
+        },
+        "pull_request": {
+          "href": "https:\/\/api.github.com\/repos\/Polymer\/CustomElements\/pulls\/97"
+        }
+      }
+    }
+  },
+  "public": true,
+  "type": "PullRequestReviewCommentEvent",
+  "url": "https:\/\/github.com\/Polymer\/CustomElements\/pull\/97#discussion_r9518299",
+  "actor": "jmesserly",
+  "actor_attributes": {
+    "login": "jmesserly",
+    "type": "User",
+    "gravatar_id": "97b9e181b75ee11e0d133dc446f43c3f",
+    "name": "John Messerly",
+    "company": "Google",
+    "location": "Seattle, WA",
+    "email": "jmesserly@google.com"
+  },
+  "repository": {
+    "id": 8419721,
+    "name": "CustomElements",
+    "url": "https:\/\/github.com\/Polymer\/CustomElements",
+    "description": "Custom Elements Polyfill",
+    "homepage": "https:\/\/dvcs.w3.org\/hg\/webcomponents\/raw-file\/tip\/spec\/custom\/index.html",
+    "watchers": 73,
+    "stargazers": 73,
+    "forks": 29,
+    "fork": false,
+    "size": 1589,
+    "owner": "Polymer",
+    "private": false,
+    "open_issues": 0,
+    "has_issues": true,
+    "has_downloads": true,
+    "has_wiki": true,
+    "language": "JavaScript",
+    "created_at": "2013-02-25T14:27:50-08:00",
+    "pushed_at": "2014-02-03T18:43:29-08:00",
+    "master_branch": "master",
+    "organization": "Polymer"
+  }
+}

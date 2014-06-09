@@ -1,0 +1,35 @@
+{
+  "created_at": "2014-02-06T13:12:23-08:00",
+  "public": true,
+  "type": "PublicEvent",
+  "url": "https:\/\/github.com\/rnyang\/UChicagoTradingCompetition-Quickstart",
+  "actor": "rnyang",
+  "actor_attributes": {
+    "login": "rnyang",
+    "type": "User",
+    "gravatar_id": "9d3b37ea15bb91c8d0e736d472a5d684",
+    "name": "rnyang",
+    "location": "Chicago, IL",
+    "email": "ryang8@uchicago.edu"
+  },
+  "repository": {
+    "id": 16548616,
+    "name": "UChicagoTradingCompetition-Quickstart",
+    "url": "https:\/\/github.com\/rnyang\/UChicagoTradingCompetition-Quickstart",
+    "description": "",
+    "watchers": 0,
+    "stargazers": 0,
+    "forks": 0,
+    "fork": false,
+    "size": 0,
+    "owner": "rnyang",
+    "private": false,
+    "open_issues": 0,
+    "has_issues": true,
+    "has_downloads": true,
+    "has_wiki": true,
+    "created_at": "2014-02-05T07:28:46-08:00",
+    "pushed_at": "2014-02-05T07:28:46-08:00",
+    "master_branch": "master"
+  }
+}

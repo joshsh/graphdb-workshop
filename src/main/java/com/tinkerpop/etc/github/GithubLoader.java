@@ -3,14 +3,11 @@ package com.tinkerpop.etc.github;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thinkaurelius.titan.core.TitanGraph;
-import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.TransactionalGraph;
-import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.util.wrappers.batch.BatchGraph;
 import com.tinkerpop.blueprints.util.wrappers.id.IdGraph;
 import com.tinkerpop.etc.github.beans.Event;
-import com.tinkerpop.etc.github.beans.RepositoryBrief;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -24,12 +21,8 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
@@ -42,10 +35,6 @@ import java.util.zip.GZIPInputStream;
 public class GithubLoader {
     private static final Logger LOGGER = Logger.getLogger(GithubLoader.class.getName());
 
-    public static final DateFormat
-            OLD_TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss Z"), // e.g. 2012/03/11 00:00:00 -0800
-            NEW_TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX"); // e.g. 2014-05-31T00:13:30-07:00
-
     private static final String
             DOWNLOAD_DIRECTORY = "downloadDirectory",
             LAST_FILE_LOADED = "lastFileLoaded",
@@ -57,6 +46,7 @@ public class GithubLoader {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private final Graph graph;
+    private final EventHandler handler;
     private final File statusFile;
     private final Properties configuration;
     private File lastFileLoaded;
@@ -115,6 +105,8 @@ public class GithubLoader {
         } else {
             throw new IllegalStateException("unsupported storage backend: " + storageBackend);
         }
+
+        handler = new EventHandler(graph);
     }
 
     private IdGraph<TitanGraph> idGraph(final TitanGraph baseGraph) {
@@ -124,6 +116,7 @@ public class GithubLoader {
     private BatchGraph batchGraph(final TransactionalGraph baseGraph) {
         // use BatchGraph for the vertex cache, but don't buffer commits
         return new BatchGraph<TransactionalGraph>(baseGraph, Long.MAX_VALUE);
+        //return new BatchGraph<TransactionalGraph>(baseGraph);
     }
 
     private void saveConfiguration() throws IOException {
@@ -158,9 +151,6 @@ public class GithubLoader {
             long startTime = System.currentTimeMillis();
 
             long count = loadRecursive(new File(downloadDirectory));
-
-            // commit leftover statements
-            commit();
 
             long endTime = System.currentTimeMillis();
 
@@ -216,9 +206,6 @@ public class GithubLoader {
 
                         try {
                             parseGithubJson(line.trim());
-                        } catch (InvalidEventException e) {
-                            LOGGER.warning("invalid event on line " + lineNo + " in " + fileName);
-                            throw e;
                         } catch (Exception e) {
                             LOGGER.severe("error on line " + lineNo + " in " + fileName);
                             throw e;
@@ -254,51 +241,11 @@ public class GithubLoader {
         return files;
     }
 
-    private void parseGithubJson(final String jsonStr) throws IOException, InvalidEventException {
+    private void parseGithubJson(final String jsonStr) throws IOException, IllegalAccessException {
         Event event = objectMapper.readValue(jsonStr, Event.class);
         //System.out.println("got event: " + event);
 
-        GithubSchema.EventType eventType = GithubSchema.EventType.valueOf(event.type);
-
-        switch (eventType) {
-            case CommitCommentEvent:
-                break;
-            case CreateEvent:
-                break;
-            case DeleteEvent:
-                break;
-            case DownloadEvent:
-                break;
-            case FollowEvent:
-                break;
-            case ForkEvent:
-                break;
-            case GistEvent:
-                break;
-            case GollumEvent:
-                break;
-            case IssueCommentEvent:
-                break;
-            case IssuesEvent:
-                break;
-            case MemberEvent:
-                break;
-            case PublicEvent:
-                break;
-            case PullRequestEvent:
-                break;
-            case PullRequestReviewCommentEvent:
-                break;
-            case PushEvent:
-                handlePushEvent(event, eventType);
-                break;
-            case ReleaseEvent:
-                break;
-            case TeamAddEvent:
-                break;
-            case WatchEvent:
-                break;
-        }
+        handler.handle(event);
     }
 
     private void commit() {
@@ -310,72 +257,6 @@ public class GithubLoader {
     private void rollback() {
         if (graph instanceof TransactionalGraph) {
             ((TransactionalGraph) graph).commit();
-        }
-    }
-
-    private Vertex getOrCreateVertex(final String id,
-                                     final String type) {
-        Vertex v = null == id ? null : graph.getVertex(id);
-        if (null == v) {
-            v = graph.addVertex(id);
-            v.setProperty(GithubSchema.TYPE, type);
-        }
-
-        return v;
-    }
-
-    private String repoId(final RepositoryBrief repo) {
-        //return "repo:" + repo.id;
-        return "repo:" + repo.owner + ":" + repo.name;
-    }
-
-    private String actorId(final String actor) {
-        return "user:" + actor;
-    }
-
-    private void handlePushEvent(final Event event,
-                                 final GithubSchema.EventType eventType) throws InvalidEventException {
-        if (null == event.repository) {
-            LOGGER.warning("null repository in " + GithubSchema.EventType.PushEvent);
-            return;
-        }
-
-        long timestamp = parseTimestamp(event.created_at);
-
-        RepositoryBrief repo = event.repository;
-        Vertex repoVertex = getOrCreateVertex(repoId(repo), GithubSchema.REPOSITORY);
-
-        Vertex userVertex = getOrCreateVertex(actorId(event.actor), GithubSchema.USER);
-
-        Vertex eventVertex = getOrCreateVertex(null, GithubSchema.EVENT);
-        eventVertex.setProperty(GithubSchema.EVENT_TYPE, eventType.name());
-
-        Edge e1 = graph.addEdge(null, eventVertex, userVertex, GithubSchema.PUSHED_BY);
-        e1.setProperty(GithubSchema.CREATED_AT, timestamp);
-
-        Edge e2 = graph.addEdge(null, eventVertex, repoVertex, GithubSchema.PUSHED_TO);
-        e2.setProperty(GithubSchema.CREATED_AT, timestamp);
-    }
-
-    private long parseTimestamp(final String timestamp) throws InvalidEventException {
-        Date d;
-
-        try {
-            d = NEW_TIMESTAMP_FORMAT.parse(timestamp);
-        } catch (ParseException e) {
-            try {
-                d = OLD_TIMESTAMP_FORMAT.parse(timestamp);
-            } catch (ParseException e1) {
-                throw new InvalidEventException("not a valid timestamp: " + timestamp);
-            }
-        }
-
-        return d.getTime();
-    }
-
-    private class InvalidEventException extends Exception {
-        public InvalidEventException(final String message) {
-            super(message);
         }
     }
 
@@ -453,7 +334,7 @@ public class GithubLoader {
         GithubLoader loader = new GithubLoader(config);
         loader.setVerbose(true);
 
-        loader.downloadFiles();
+        //loader.downloadFiles();
 
         loader.loadFiles();
     }

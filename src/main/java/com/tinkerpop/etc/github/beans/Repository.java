@@ -23,22 +23,22 @@ public class Repository {
     public String description;
     public String downloads_url;
     public String events_url;
-    public boolean fork;
-    public int forks;
-    public int forks_count;
+    public Boolean fork;
+    public Integer forks;
+    public Integer forks_count;
     public String forks_url;
     public String full_name;
     public String git_commits_url;
     public String git_refs_url;
     public String git_tags_url;
     public String git_url;
-    public boolean has_downloads;
-    public boolean has_issues;
-    public boolean has_wiki;
+    public Boolean has_downloads;
+    public Boolean has_issues;
+    public Boolean has_wiki;
     public String homepage;
     public String hooks_url;
     public String html_url;
-    public long id;
+    public Long id;
     public String issues_url;
     public String issue_comment_url;
     public String issue_events_url;
@@ -51,20 +51,20 @@ public class Repository {
     public String mirror_url;
     public String name;
     public String notifications_url;
-    public int open_issues;
-    public int open_issues_count;
+    public Integer open_issues;
+    public Integer open_issues_count;
     public User owner;
     public Permissions permissions;
 
     @JsonProperty("private")
-    public boolean private_;
+    public Boolean private_;
 
     public String pulls_url;
     public String pushed_at;
     public String releases_url;
-    public int size;
+    public Integer size;
     public String ssh_url;
-    public int stargazers_count;
+    public Integer stargazers_count;
     public String stargazers_url;
     public String statuses_url;
     public String subscribers_url;
@@ -75,8 +75,8 @@ public class Repository {
     public String trees_url;
     public String updated_at;
     public String url;
-    public int watchers;
-    public int watchers_count;
+    public Integer watchers;
+    public Integer watchers_count;
 
     public String master_branch;
     public Urls urls;

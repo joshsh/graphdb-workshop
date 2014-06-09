@@ -5,7 +5,7 @@ package com.tinkerpop.etc.github.beans;
  */
 public class Permissions {
 
-    public boolean admin;
-    public boolean pull;
-    public boolean push;
+    public Boolean admin;
+    public Boolean pull;
+    public Boolean push;
 }

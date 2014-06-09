@@ -5,15 +5,15 @@ package com.tinkerpop.etc.github.beans;
  */
 public class Milestone {
 
-    public int closed_issues;
+    public Integer closed_issues;
     public String created_at;
     public User creator;
     public String description;
     public String due_on;
-    public long id;
+    public Long id;
     public String labels_url;
-    public int number;
-    public int open_issues;
+    public Integer number;
+    public Integer open_issues;
     public String state;
     public String title;
     public String updated_at;

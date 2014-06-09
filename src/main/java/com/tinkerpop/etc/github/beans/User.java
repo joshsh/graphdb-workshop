@@ -12,12 +12,12 @@ public class User {
     public String gists_url;
     public String gravatar_id;
     public String html_url;
-    public long id;
+    public Long id;
     public String login;
     public String organizations_url;
     public String received_events_url;
     public String repos_url;
-    public boolean site_admin;
+    public Boolean site_admin;
     public String starred_url;
     public String subscriptions_url;
     public String type;

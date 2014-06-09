@@ -13,7 +13,7 @@ public class Event {
     public Payload payload;
 
     @JsonProperty("public")
-    public boolean public_;
+    public Boolean public_;
 
     public RepositoryBrief repository;
     public String type;

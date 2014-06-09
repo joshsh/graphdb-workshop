@@ -1,0 +1,41 @@
+{
+  "created_at": "2014-02-06T13:08:12-08:00",
+  "payload": {
+    "ref": "NI\/layout",
+    "ref_type": "branch"
+  },
+  "public": true,
+  "type": "DeleteEvent",
+  "url": "https:\/\/github.com\/",
+  "actor": "Sbgodin",
+  "actor_attributes": {
+    "login": "Sbgodin",
+    "type": "User",
+    "name": "Sbgodin",
+    "blog": "http:\/\/sbgodin.fr",
+    "location": "Metz, France",
+    "email": ""
+  },
+  "repository": {
+    "id": 8796235,
+    "name": "Leed",
+    "url": "https:\/\/github.com\/ldleman\/Leed",
+    "description": "Leed (contraction de Light Feed) est un agr\u00e9gatteur RSS libre et minimaliste qui permet la consultation de flux RSS de mani\u00e8re rapide et non intrusive.",
+    "homepage": "http:\/\/projet.idleman.fr\/leed",
+    "watchers": 84,
+    "stargazers": 84,
+    "forks": 27,
+    "fork": false,
+    "size": 3083,
+    "owner": "ldleman",
+    "private": false,
+    "open_issues": 49,
+    "has_issues": true,
+    "has_downloads": true,
+    "has_wiki": false,
+    "language": "PHP",
+    "created_at": "2013-03-15T02:57:01-07:00",
+    "pushed_at": "2014-02-06T13:08:12-08:00",
+    "master_branch": "master"
+  }
+}

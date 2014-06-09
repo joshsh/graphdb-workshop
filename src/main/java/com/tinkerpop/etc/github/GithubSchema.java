@@ -29,18 +29,29 @@ public interface GithubSchema {
 
     // property names
     public static final String
-            CREATED_AT = "created_at",
-            EVENT_TYPE = "event_type",
-            TYPE = "type";
+            TIMESTAMP = "timestamp",
+            TYPE = "type_";
 
     // property values
     public static final String
-            EVENT = "event",
-            REPOSITORY = "repository",
-            USER = "user";
+            TYPE_COMMENT = "Comment",
+            TYPE_EVENT = "Event",
+            TYPE_PAGE = "Page",
+            TYPE_PULL_REQUEST = "PullRequest",
+            TYPE_RELEASE = "Release",
+            TYPE_REPOSITORY = "Repository",
+            TYPE_TEAM = "Team",
+            TYPE_USER = "User";
 
-    // edge labels
-    public static final String
-            PUSHED_BY = "pushedBy",
-            PUSHED_TO = "pushedTo";
+    public enum Label {
+        actor,
+        comment,
+        member,
+        page,
+        pull_request,
+        release,
+        repository,
+        target,
+        team
+    }
 }

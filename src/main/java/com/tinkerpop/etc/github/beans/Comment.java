@@ -9,11 +9,11 @@ public class Comment {
     public String created_at;
     public String diff_hunk;
     public String html_url;
-    public long id;
+    public Long id;
     public String original_commit_id;
-    public int original_position;
+    public Integer original_position;
     public String path;
-    public int position;
+    public Integer position;
     public String pull_request_url;
     public String updated_at;
     public String url;

@@ -9,28 +9,28 @@ public class RepositoryBrief {
 
     public String created_at;
     public String description;
-    public boolean fork;
-    public int forks;
-    public boolean has_downloads;
-    public boolean has_issues;
-    public boolean has_wiki;
+    public Boolean fork;
+    public Integer forks;
+    public Boolean has_downloads;
+    public Boolean has_issues;
+    public Boolean has_wiki;
     public String homepage;
-    public long id;
+    public Long id;
     public String language;
     public String master_branch;
     public String name;
-    public int open_issues;
+    public Integer open_issues;
     public String organization;
     public String owner;
 
     @JsonProperty("private")
-    public boolean private_;
+    public Boolean private_;
 
     public String pushed_at;
-    public int size;
-    public int stargazers;
+    public Integer size;
+    public Integer stargazers;
     public String url;
-    public int watchers;
+    public Integer watchers;
 
     public String integrate_branch;
 }

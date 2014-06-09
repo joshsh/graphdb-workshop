@@ -1,0 +1,55 @@
+{
+  "created_at": "2014-02-06T13:04:22-08:00",
+  "payload": {
+    "member": {
+      "login": "simohuns",
+      "id": 6590083,
+      "avatar_url": "https:\/\/gravatar.com\/avatar\/c5e82538c3ac59f5c0ad7a47fc0a6ed8?d=https%3A%2F%2Fidenticons.github.com%2F86fbcd16896704fdeecd2ef277b89cfc.png&r=x",
+      "gravatar_id": "c5e82538c3ac59f5c0ad7a47fc0a6ed8",
+      "url": "https:\/\/api.github.com\/users\/simohuns",
+      "html_url": "https:\/\/github.com\/simohuns",
+      "followers_url": "https:\/\/api.github.com\/users\/simohuns\/followers",
+      "following_url": "https:\/\/api.github.com\/users\/simohuns\/following{\/other_user}",
+      "gists_url": "https:\/\/api.github.com\/users\/simohuns\/gists{\/gist_id}",
+      "starred_url": "https:\/\/api.github.com\/users\/simohuns\/starred{\/owner}{\/repo}",
+      "subscriptions_url": "https:\/\/api.github.com\/users\/simohuns\/subscriptions",
+      "organizations_url": "https:\/\/api.github.com\/users\/simohuns\/orgs",
+      "repos_url": "https:\/\/api.github.com\/users\/simohuns\/repos",
+      "events_url": "https:\/\/api.github.com\/users\/simohuns\/events{\/privacy}",
+      "received_events_url": "https:\/\/api.github.com\/users\/simohuns\/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "action": "added"
+  },
+  "public": true,
+  "type": "MemberEvent",
+  "url": "https:\/\/github.com\/Llewen\/WallaceFarms",
+  "actor": "Llewen",
+  "actor_attributes": {
+    "login": "Llewen",
+    "type": "User",
+    "gravatar_id": "c73dde962a5a787ac557a87bc6f95aa3"
+  },
+  "repository": {
+    "id": 16531491,
+    "name": "WallaceFarms",
+    "url": "https:\/\/github.com\/Llewen\/WallaceFarms",
+    "description": "Software Engineering Project Geneva",
+    "watchers": 0,
+    "stargazers": 0,
+    "forks": 0,
+    "fork": false,
+    "size": 0,
+    "owner": "Llewen",
+    "private": false,
+    "open_issues": 0,
+    "has_issues": true,
+    "has_downloads": true,
+    "has_wiki": true,
+    "language": "JavaScript",
+    "created_at": "2014-02-04T17:13:16-08:00",
+    "pushed_at": "2014-02-04T18:35:11-08:00",
+    "master_branch": "Sprint1"
+  }
+}

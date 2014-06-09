@@ -10,11 +10,11 @@ public class Release {
     public User author;
     public String body;
     public String created_at;
-    public boolean draft;
+    public Boolean draft;
     public String html_url;
-    public long id;
+    public Long id;
     public String name;
-    public boolean prerelease;
+    public Boolean prerelease;
     public String published_at;
     public String tag_name;
     public String tarball_url;

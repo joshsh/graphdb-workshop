@@ -1,0 +1,25 @@
+{
+  "created_at": "2013-09-09T18:00:29-07:00",
+  "payload": {
+    "target": {
+      "id": 442722,
+      "login": "Kivutar",
+      "followers": 17,
+      "repos": 18,
+      "gravatar_id": "429a2a9fc4560fd8f5482e7541b1ffdd"
+    }
+  },
+  "public": true,
+  "type": "FollowEvent",
+  "url": "https:\/\/github.com\/Kivutar",
+  "actor": "gergelypolonkai",
+  "actor_attributes": {
+    "login": "gergelypolonkai",
+    "type": "User",
+    "gravatar_id": "cb3c19d1d2fc75bc34ac77c1c42bc5e7",
+    "name": "Gergely Polonkai",
+    "blog": "http:\/\/gergely.polonkai.eu",
+    "location": "Tura, Hungary",
+    "email": "gergely@polonkai.eu"
+  }
+}

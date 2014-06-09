@@ -23,6 +23,24 @@ public class GraphFactory {
         return new TinkerGraph();
     }
 
+    public static TitanGraph createTitanOnBerkeleyJE(final String dir,
+                                                     final String keyspace) {
+        Configuration conf = new BaseConfiguration();
+
+        conf.setProperty("storage.backend", "berkeleyje");
+        conf.setProperty("storage.directory", dir);
+        conf.setProperty("storage.batch-loading", "true");
+        if (null != keyspace) {
+            conf.setProperty("storage.keyspace", keyspace);
+        }
+
+        TitanGraph g = TitanFactory.open(conf);
+
+        setupTitanGraph(g);
+
+        return g;
+    }
+
     public static TitanGraph createTitanOnCassandra(final String host,
                                                     final String keyspace) {
         Configuration conf = new BaseConfiguration();
@@ -41,18 +59,16 @@ public class GraphFactory {
         return g;
     }
 
-    public static TitanGraph createTitanOnBerkeleyJE(final String dir,
-                                                     final String keyspace) {
+    public static TitanGraph createTitanOnHBase(final String keyspace) {
         Configuration conf = new BaseConfiguration();
 
-        conf.setProperty("storage.backend", "berkeleyje");
-        conf.setProperty("storage.directory", dir);
+        conf.setProperty("storage.backend", "hbase");
         conf.setProperty("storage.batch-loading", "true");
         if (null != keyspace) {
             conf.setProperty("storage.keyspace", keyspace);
         }
 
-        TitanGraph g = TitanFactory.open(conf);
+        TitanGraph g =  TitanFactory.open(conf);
 
         setupTitanGraph(g);
 

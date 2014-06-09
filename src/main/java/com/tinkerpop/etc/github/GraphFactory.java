@@ -29,6 +29,7 @@ public class GraphFactory {
 
         conf.setProperty("storage.backend", "cassandra");
         conf.setProperty("storage.hostname", host);
+        conf.setProperty("storage.batch-loading", "true");
         if (null != keyspace) {
             conf.setProperty("storage.keyspace", keyspace);
         }
@@ -46,6 +47,7 @@ public class GraphFactory {
 
         conf.setProperty("storage.backend", "berkeleyje");
         conf.setProperty("storage.directory", dir);
+        conf.setProperty("storage.batch-loading", "true");
         if (null != keyspace) {
             conf.setProperty("storage.keyspace", keyspace);
         }
@@ -66,7 +68,7 @@ public class GraphFactory {
         }
 
         if (null == g.getType("name")) {
-            g.createKeyIndex("name",Vertex.class);
+            g.createKeyIndex("name", Vertex.class);
         }
 
         // edge-specific keys

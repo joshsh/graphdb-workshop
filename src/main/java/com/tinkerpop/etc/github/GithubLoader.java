@@ -2,10 +2,13 @@ package com.tinkerpop.etc.github;
 
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.thinkaurelius.titan.core.TitanGraph;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.TransactionalGraph;
 import com.tinkerpop.blueprints.Vertex;
+import com.tinkerpop.blueprints.util.wrappers.batch.BatchGraph;
+import com.tinkerpop.blueprints.util.wrappers.id.IdGraph;
 import com.tinkerpop.etc.github.beans.Event;
 import com.tinkerpop.etc.github.beans.RepositoryBrief;
 
@@ -60,8 +63,6 @@ public class GithubLoader {
     private String downloadDirectory;
     private GithubTimestamp startHour, endHour;
 
-    private long countToCommit = 0;
-
     private final Comparator<File> fileComparator = new GitHubArchiveFileComparator();
 
     public GithubLoader(final File statusFile) throws IOException {
@@ -105,13 +106,22 @@ public class GithubLoader {
             graph = GraphFactory.createTinkerGraph();
         } else if (storageBackend.equals("cassandra")) {
             String host = configuration.getProperty("storage.hostname", "127.0.0.1");
-            graph = GraphFactory.createTitanOnCassandra(host, keyspace);
+            graph = batchGraph(idGraph(GraphFactory.createTitanOnCassandra(host, keyspace)));
         } else if (storageBackend.equals("berkeleyje")) {
             String dir = configuration.getProperty("storage.directory", "/tmp/github");
-            graph = GraphFactory.createTitanOnBerkeleyJE(dir, keyspace);
+            graph = batchGraph(idGraph(GraphFactory.createTitanOnBerkeleyJE(dir, keyspace)));
         } else {
             throw new IllegalStateException("unsupported storage backend: " + storageBackend);
         }
+    }
+
+    private IdGraph<TitanGraph> idGraph(final TitanGraph baseGraph) {
+        return new IdGraph<TitanGraph>(baseGraph, true, false);
+    }
+
+    private BatchGraph batchGraph(final TransactionalGraph baseGraph) {
+        // use BatchGraph for the vertex cache, but don't buffer commits
+        return new BatchGraph<TransactionalGraph>(baseGraph, Long.MAX_VALUE);
     }
 
     private void saveConfiguration() throws IOException {

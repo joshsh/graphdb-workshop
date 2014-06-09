@@ -34,4 +34,5 @@ public class Payload {
     public Long id;
     public String desc;
     public User target;
+    public Long membership_id;
 }

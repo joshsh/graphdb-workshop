@@ -96,12 +96,12 @@ public class GithubLoader {
             graph = GraphFactory.createTinkerGraph();
         } else if (storageBackend.equals("berkeleyje")) {
             String dir = configuration.getProperty("storage.directory", "/tmp/github");
-            graph = batchGraph(idGraph(GraphFactory.createTitanOnBerkeleyJE(dir, keyspace)));
+            graph = batchGraph(GraphFactory.createTitanOnBerkeleyJE(dir, keyspace));
         } else if (storageBackend.equals("cassandra")) {
             String host = configuration.getProperty("storage.hostname", "127.0.0.1");
-            graph = batchGraph(idGraph(GraphFactory.createTitanOnCassandra(host, keyspace)));
+            graph = batchGraph(GraphFactory.createTitanOnCassandra(host, keyspace));
         } else if (storageBackend.equals("hbase")) {
-            graph = batchGraph(idGraph(GraphFactory.createTitanOnHBase(keyspace)));
+            graph = batchGraph(GraphFactory.createTitanOnHBase(keyspace));
         } else {
             throw new IllegalStateException("unsupported storage backend: " + storageBackend);
         }

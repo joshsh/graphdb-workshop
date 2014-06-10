@@ -1,9 +1,12 @@
 package com.tinkerpop.etc.github;
 
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
+import com.thinkaurelius.titan.graphdb.idmanagement.IDInspector;
+import com.thinkaurelius.titan.graphdb.idmanagement.IDManager;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.Vertex;
-import com.tinkerpop.blueprints.impls.tg.TinkerGraph;
 import com.tinkerpop.blueprints.util.wrappers.id.IdGraph;
 import com.tinkerpop.etc.github.beans.Comment;
 import com.tinkerpop.etc.github.beans.Event;
@@ -15,11 +18,13 @@ import com.tinkerpop.etc.github.beans.Team;
 import com.tinkerpop.etc.github.beans.User;
 
 import java.lang.reflect.Field;
+import java.nio.charset.Charset;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -44,17 +49,19 @@ public class EventHandler {
     }
 
     private final Graph graph;
-    private final IdGraph.IdFactory idFactory = new IdGraph(new TinkerGraph()).getVertexIdFactory();
+    private final HashFunction idHashFunction;
 
     public EventHandler(final Graph graph) {
         this.graph = graph;
+
+        idHashFunction = Hashing.sipHash24();
     }
 
     public void handle(final Event sourceEvent) throws IllegalAccessException {
 
         long timestamp = parseTimestamp(sourceEvent.created_at);
 
-        Vertex eventV = getOrCreateVertex(idFactory.createId(), GithubSchema.TYPE_EVENT);
+        Vertex eventV = getOrCreateVertex(randomVertexId(), null, GithubSchema.TYPE_EVENT);
         //event.setProperty(GithubSchema.EVENT_TYPE, eventType.name());
 
         setProperties(sourceEvent, eventV);
@@ -120,6 +127,41 @@ public class EventHandler {
         }
     }
 
+    private final Random random = new Random();
+
+    private final IDInspector idInspector = new IDManager().getIDInspector();
+
+    private long randomVertexId() {
+        long id;
+        do {
+            id = Math.abs(idHashFunction.hashLong(random.nextLong()).asLong());
+        } while (!idInspector.isVertexID(id));
+
+        return id;
+    }
+
+    private long randomEdgeId() {
+        long id;
+        do {
+            id = Math.abs(idHashFunction.hashLong(random.nextLong()).asLong());
+        } while (!idInspector.isRelationID(id));
+
+        return id;
+    }
+
+    private long hashedVertexId(final String toHash) {
+        long id = Math.abs(idHashFunction.hashString(toHash, Charset.defaultCharset()).asLong());
+        int count = 0;
+        while (!idInspector.isVertexID(id)) {
+            if (++count == 64) {
+                throw new IllegalStateException("couldn't find a valid ID");
+            }
+            id = Math.abs(id * 2);
+        }
+
+        return id;
+    }
+
     protected long parseTimestamp(final String timestamp) {
         Date d;
 
@@ -140,37 +182,42 @@ public class EventHandler {
                              final Vertex inV,
                              final GithubSchema.Label label,
                              final long timestamp) {
-        Edge e = graph.addEdge(null, eventV, inV, label.name());
+        Edge e = graph.addEdge(randomEdgeId(), eventV, inV, label.name());
         e.setProperty(GithubSchema.TIMESTAMP, timestamp);
     }
 
-    protected Vertex getOrCreateVertex(final Object id,
+    protected Vertex getOrCreateVertex(final long internalId,
+                                       final String originalId,
                                        final String type) {
-        Vertex v = null == id ? null : graph.getVertex(id);
+        Vertex v = graph.getVertex(internalId);
         if (null == v) {
-            v = graph.addVertex(id);
+            v = graph.addVertex(internalId);
+            if (null != originalId) {
+                v.setProperty(IdGraph.ID, originalId);
+            }
             v.setProperty(GithubSchema.TYPE, type);
         }
 
         return v;
     }
 
-    private Vertex getActor(final Event sourceEvent) throws IllegalAccessException {
-        Vertex actor = getOrCreateVertex("user:" + sourceEvent.actor, GithubSchema.TYPE_USER);
-        if (null != sourceEvent.actor_attributes) {
-            setProperties(sourceEvent.actor_attributes, actor);
-        }
-
-        return actor;
-    }
-
     private Vertex getVertex(final Object source,
                              final Object id,
                              final String prefix,
                              final String type) throws IllegalAccessException {
-        Vertex v = getOrCreateVertex(null == id ? null : prefix + id, type);
-        setProperties(source, v);
+
+        String originalId = null == id ? null : prefix + id;
+        long internalId = null == id ? randomVertexId() : hashedVertexId(originalId);
+
+        Vertex v = getOrCreateVertex(internalId, originalId, type);
+        if (null != source) {
+            setProperties(source, v);
+        }
         return v;
+    }
+
+    protected Vertex getActor(final Event source) throws IllegalAccessException {
+        return getVertex(source.actor_attributes, source.actor, "user:", GithubSchema.TYPE_USER);
     }
 
     protected Vertex getUser(final User source) throws IllegalAccessException {
@@ -210,13 +257,19 @@ public class EventHandler {
                 if (PROPERTY_CLASSES.contains(value.getClass())) {
                     String key = f.getName();
                     key = fixPropertyKey(key);
-                    target.setProperty(key, value);
+                    try {
+                        target.setProperty(key, value);
+                    } catch (IllegalArgumentException e) {
+                        // occasionally, Titan will reject certain property values
+                        LOGGER.warning("failed to set property " + key + " on vertex " + target.getId() + ": " + e.getMessage());
+                    }
                 }
             }
         }
     }
 
     private static final Set<String> RESERVED_KEYS;
+
     static {
         RESERVED_KEYS = new HashSet<String>();
         for (GithubSchema.Label l : GithubSchema.Label.values()) {
@@ -227,6 +280,6 @@ public class EventHandler {
     }
 
     public static String fixPropertyKey(final String key) {
-       return RESERVED_KEYS.contains(key) ? key + "_" : key;
+        return RESERVED_KEYS.contains(key) ? key + "_" : key;
     }
 }

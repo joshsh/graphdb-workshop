@@ -2,11 +2,9 @@ package com.tinkerpop.etc.github;
 
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.thinkaurelius.titan.core.TitanGraph;
 import com.tinkerpop.blueprints.Graph;
 import com.tinkerpop.blueprints.TransactionalGraph;
 import com.tinkerpop.blueprints.util.wrappers.batch.BatchGraph;
-import com.tinkerpop.blueprints.util.wrappers.id.IdGraph;
 import com.tinkerpop.etc.github.beans.Event;
 
 import java.io.BufferedReader;
@@ -109,14 +107,9 @@ public class GithubLoader {
         handler = new EventHandler(graph);
     }
 
-    private IdGraph<TitanGraph> idGraph(final TitanGraph baseGraph) {
-        return new IdGraph<TitanGraph>(baseGraph, true, false);
-    }
-
     private BatchGraph batchGraph(final TransactionalGraph baseGraph) {
         // use BatchGraph for the vertex cache, but don't buffer commits
         return new BatchGraph<TransactionalGraph>(baseGraph, Long.MAX_VALUE);
-        //return new BatchGraph<TransactionalGraph>(baseGraph);
     }
 
     private void saveConfiguration() throws IOException {
@@ -264,9 +257,11 @@ public class GithubLoader {
         if (null == downloadDirectory) {
             throw new IllegalStateException("" + DOWNLOAD_DIRECTORY + " must be set");
         }
-        // wget http://data.githubarchive.org/2014-05-31-{0..23}.json.gz
 
         File dir = new File(downloadDirectory);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
 
         for (File f : dir.listFiles()) {
             if (f.getName().endsWith(".tmp")) {
@@ -325,18 +320,23 @@ public class GithubLoader {
         }
     }
 
-    public static void main(final String[] args) throws Exception {
-        File config = args.length > 0 ? new File(args[0]) : new File("githubloader.props");
-        if (!config.exists()) {
-            exitWithError("configuration file does not exist: " + config.getAbsoluteFile());
+    public static void main(final String[] args) {
+        try {
+            File config = args.length > 0 ? new File(args[0]) : new File("example.properties");
+            if (!config.exists()) {
+                exitWithError("configuration file does not exist: " + config.getAbsoluteFile());
+            }
+
+            GithubLoader loader = new GithubLoader(config);
+            loader.setVerbose(true);
+
+            loader.downloadFiles();
+
+            loader.loadFiles();
+        } catch (Throwable t) {
+            t.printStackTrace(System.err);
+            System.exit(1);
         }
-
-        GithubLoader loader = new GithubLoader(config);
-        loader.setVerbose(true);
-
-        //loader.downloadFiles();
-
-        loader.loadFiles();
     }
 
     private static void exitWithError(final String message) {

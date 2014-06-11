@@ -207,7 +207,7 @@ public class GithubLoader {
 
                     long endTime = System.currentTimeMillis();
                     if (verbose) {
-                        LOGGER.info("\tfinished reading " + lineNo + " lines in " + (endTime - startTime) + "ms");
+                        LOGGER.info("\timported " + lineNo + " events in " + (endTime - startTime) + "ms (" + (lineNo * 1000 / (endTime - startTime)) + " events/s)");
                     }
 
                     lastFileLoaded = fileOrDirectory;
@@ -330,7 +330,7 @@ public class GithubLoader {
             GithubLoader loader = new GithubLoader(config);
             loader.setVerbose(true);
 
-            //loader.downloadFiles();
+            loader.downloadFiles();
 
             loader.loadFiles();
         } catch (Throwable t) {

@@ -61,8 +61,8 @@ public class EventHandler {
 
         long timestamp = parseTimestamp(sourceEvent.created_at);
 
-        Vertex eventV = getOrCreateVertex(randomVertexId(), null, GithubSchema.TYPE_EVENT);
-        //event.setProperty(GithubSchema.EVENT_TYPE, eventType.name());
+        long id = randomVertexId();
+        Vertex eventV = getOrCreateVertex(id, "event:" + id, GithubSchema.TYPE_EVENT);
 
         setProperties(sourceEvent, eventV);
 
@@ -192,9 +192,7 @@ public class EventHandler {
         Vertex v = graph.getVertex(internalId);
         if (null == v) {
             v = graph.addVertex(internalId);
-            if (null != originalId) {
-                v.setProperty(IdGraph.ID, originalId);
-            }
+            v.setProperty(IdGraph.ID, originalId);
             v.setProperty(GithubSchema.TYPE, type);
         }
 
@@ -205,9 +203,12 @@ public class EventHandler {
                              final Object id,
                              final String prefix,
                              final String type) throws IllegalAccessException {
+        if (null == id) {
+            throw new IllegalArgumentException("null id");
+        }
 
-        String originalId = null == id ? null : prefix + id;
-        long internalId = null == id ? randomVertexId() : hashedVertexId(originalId);
+        String originalId = prefix + id;
+        long internalId = hashedVertexId(originalId);
 
         Vertex v = getOrCreateVertex(internalId, originalId, type);
         if (null != source) {
@@ -241,7 +242,7 @@ public class EventHandler {
     }
 
     protected Vertex getRepository(final RepositoryBrief source) throws IllegalAccessException {
-        return getVertex(source, source.id, "repo:", GithubSchema.TYPE_REPOSITORY);
+        return getVertex(source, source.owner + "/" + source.name, "repo:", GithubSchema.TYPE_REPOSITORY);
     }
 
     protected Vertex getTeam(final Team source) throws IllegalAccessException {

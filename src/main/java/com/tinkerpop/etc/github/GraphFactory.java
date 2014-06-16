@@ -46,17 +46,8 @@ public class GraphFactory {
 
         conf.setProperty("storage.backend", "berkeleyje");
         conf.setProperty("storage.directory", dir);
-        conf.setProperty("storage.batch-loading", "true");
-        conf.setProperty("set-vertex-id", "true");
-        if (null != keyspace) {
-            conf.setProperty("storage.keyspace", keyspace);
-        }
 
-        TitanGraph g = TitanFactory.open(conf);
-
-        setupTitanGraph(g);
-
-        return g;
+        return createTitanGraph(conf, keyspace);
     }
 
     public static TitanGraph createTitanOnCassandra(final String host,
@@ -65,37 +56,32 @@ public class GraphFactory {
 
         conf.setProperty("storage.backend", "cassandra");
         conf.setProperty("storage.hostname", host);
-        conf.setProperty("storage.batch-loading", "true");
-        conf.setProperty("set-vertex-id", "true");
-        if (null != keyspace) {
-            conf.setProperty("storage.keyspace", keyspace);
-        }
 
-        TitanGraph g = TitanFactory.open(conf);
-
-        setupTitanGraph(g);
-
-        return g;
+        return createTitanGraph(conf, keyspace);
     }
 
     public static TitanGraph createTitanOnHBase(final String keyspace) {
         Configuration conf = new BaseConfiguration();
 
         conf.setProperty("storage.backend", "hbase");
+
+        return createTitanGraph(conf, keyspace);
+    }
+
+    private static TitanGraph createTitanGraph(final Configuration conf,
+                                               final String keyspace) {
         conf.setProperty("storage.batch-loading", "true");
         conf.setProperty("set-vertex-id", "true");
+        conf.setProperty("autotype", "none");
+
+        // conservatively estimate 1500 events/s, disregarding other vertices
+        conf.setProperty("ids.block-size", "5400000");
+
         if (null != keyspace) {
             conf.setProperty("storage.keyspace", keyspace);
         }
 
         TitanGraph g = TitanFactory.open(conf);
-
-        setupTitanGraph(g);
-
-        return g;
-    }
-
-    private static void setupTitanGraph(final TitanGraph g) {
 
         TitanType timestamp;
 
@@ -137,5 +123,7 @@ public class GraphFactory {
         }
 
         g.commit();
+
+        return g;
     }
 }

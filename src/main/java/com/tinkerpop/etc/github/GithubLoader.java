@@ -207,7 +207,8 @@ public class GithubLoader {
 
                     long endTime = System.currentTimeMillis();
                     if (verbose) {
-                        LOGGER.info("\timported " + lineNo + " events in " + (endTime - startTime) + "ms (" + (lineNo * 1000 / (endTime - startTime)) + " events/s)");
+                        LOGGER.info("\timported " + lineNo + " events in " + (endTime - startTime) + "ms"
+                                + (endTime > startTime ? " (" + (lineNo * 1000 / (endTime - startTime)) + " events/s)" : ""));
                     }
 
                     lastFileLoaded = fileOrDirectory;
